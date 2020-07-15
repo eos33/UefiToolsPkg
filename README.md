@@ -1,16 +1,25 @@
 UefiToolsPkg
 ============
 
-Various useful utilities for UEFI.
+This is a Tiano Core (edk2) package with various goodies. The
+goal was to make the UEFI environment much more useful
+to system hackers. It may be a reduced environment, but
+there's no need for it to remain a crippled one. People
+make the analogy of UEFI being the 21st century equivalent
+of DOS, yet DOS was a vastly more useful environment than
+UEFI is today.
 
-* FdtDump       - Dump system device tree to storage.
-* AcpiDump      - Dump system ACPI tables to storage.
-* AcpiLoader    - Load system ACPI tables from storage.
-* ShellPlatVars - Set UEFI Shell environment variables
-                  based on platform ACPI/SMBIOS
-                  configuration.
-* MemResv       - Create new memory map entries.
-* gdb_uefi.py   - Load TianoCore symbols in gdb.
+Hopefully, one day this will grow into a veritable
+distribution of software to be productive even
+without a "real OS" around.
+
+* Useful [utilities](#utilities) for developers and admins.
+* Ported UNIX [tools](#unix-tools).
+* Useful [libraries](#libraries) for developers.
+* [Drivers](#drivers) for UEFI.
+* [Development tools](#development-tools) for Windows/Linux.
+
+Other tools [around the Web](OTHER.md).
 
 Building
 --------
@@ -19,7 +28,7 @@ Assuming you have EDK2 (http://www.tianocore.org/edk2/)
 all configured and capable of producing builds for your
 target architecture:
 
-    $ git clone https://github.com/andreiw/UefiToolsPkg.git
+    $ git clone --recursive https://github.com/andreiw/UefiToolsPkg.git
     $ build -p UefiToolsPkg/UefiToolsPkg.dsc
 
 To override architecture and/or toolchain:
@@ -27,180 +36,59 @@ To override architecture and/or toolchain:
     $ build -p UefiToolsPkg/UefiToolsPkg.dsc -a PPC64
     $ build -p UefiToolsPkg/UefiToolsPkg.dsc -a X64 -t GCC49
 
-There's no architecture-specific code.
+Utilities
+---------
 
-FdtDump
--------
+Name | Description | Notes
+---|---|---
+[FdtDump](Applications/FdtDump) | dump system device tree to storage | [`README.md`](Applications/FdtDump/README.md)
+[AcpiDump](Applications/AcpiDump) | dump system ACPI tables to storage | [`README.md`](Applications/AcpiDump/README.md)
+[AcpiLoader](Applications/AcpiLoader) | load system ACPI tables from storage | [`README.md`](Applications/AcpiLoader/README.md)
+[ShellPlatVars](Applications/ShellPlatVars) | set UEFI Shell variables based on platform configuration | [`README.md`](Applications/ShellPlatVars/README.md)
+[ShellErrVars](Applications/ShellErrVars) | set UEFI Shell variables to look up EFI RETURN_STATUS values | [`README.md`](Applications/ShellErrVars/README.md)
+[ShellMapVar](Applications/ShellMapVar) | set `%mapvar%` with own current device mapping | [`README.md`](Applications/ShellMapVar/README.md)
+[MemResv](Applications/MemResv) | create new memory map entries | [`README.md`](Applications/MemResv/README.md)
+[RangeIsMapped](Applications/RangeIsMapped) | validates ranges in the memory map | [`README.md`](Applications/RangeIsMapped/README.md)
+[GopTool](Applications/GopTool) | check and manipulate EFI_GRAPHICS_OUTPUT_PROTOCOL instances | [`README.md`](Applications/GopTool/README.md)
+[SetCon](Applications/SetCon) | check and manipulate console device variables | [`README.md`](Applications/SetCon/README.md)
+[PciRom](Applications/PciRom) | list and save PCI ROM images | [`README.md`](Applications/RomPci/README.md)
+[tinycc](https://github.com/andreiw/tinycc) | port of TinyCC to UEFI | [`README.md`](https://github.com/andreiw/tinycc/blob/mob/README.md#tcc-in-uefi)
 
-FdtDump will dump the device tree blob to the same volume
-the tool is located on. This is sometimes useful, but keep
-in mind that some UEFI implementations can patch the DTB
-on the way out during ExitBootServices, meaning you might
-not get the same (correct) data if you dumped the DTB from
-the OS proper.
-
-Note: this tool is not available for IA32, X64, IPF and
-EBC targets.
-
-An optional parameter specifies the path, relative to the
-volume root, where to place the tables. E.g.:
-
-    fs16:> FdtDump.efi
-    fs16:> FdtDump.efi MyFunkySystem
-
-AcpiDump
---------
-
-AcpiDump will dump all of the ACPI tables to the same volume
-the tool is located on. This is sometimes useful, but keep
-in mind that some UEFI implementations can patch ACPI tables
-on the way out during ExitBootServices, meaning you might
-not get the same (correct) data if you dumped tables from
-the OS proper.
-
-An optional parameter specifies the path, relative to the
-volume root, where to place the tables. E.g.:
-
-    fs16:> AcpiDump.efi
-    fs16:> AcpiDump.efi MyFunkySystem
-
-The files produced can be loaded by AcpiLoader.
-
-AcpiLoader
+UNIX Tools
 ----------
 
-AcpiLoader will remove all of the existing ACPI tables
-and install tables loaded from the same volume the
-tool is on. Every file with an AML (aml) extension
-is loaded.
+Name | Description | Notes
+---|---|---
+[cat](Applications/cat) | Port of NetBSD cat | [`README.md`](Applications/cat/README.md)
+[dd](Applications/dd) | Port of NetBSD dd | [`README.md`](Applications/dd/README.md)
+[grep](Applications/grep) | Port of NetBSD grep | [`README.md`](Applications/grep/README.md)
+[ls](Applications/ls) | Port of NetBSD directory lister | [`README.md`](Applications/ls/README.md)
+[stat](Applications/stat) | Port of NetBSD stat | [`README.md`](Applications/stat/README.md)
 
-An optional parameter specifies the path, relative to
-the volume root, where the tables are loaded from. E.g.:
+Libraries
+---------
 
-    fs16:> AcpiLoader.efi
-    fs16:> AcpiLoader.efi MyFunkySystem
+Name | Description | Notes
+---|---|---
+[UtilsLib](Library/UtilsLib) | consumed by the above utilities | None
+[SoftFloatLib](Library/SoftFloatLib) | port of SoftFloat-3d to UEFI | [`README.md`](Library/SoftFloatLib/README.md)
+[FTSLib](Library/FTSLib) | port of FTS(3) routines, file hierarchy traversal | [`README.md`](Library/FTSLib/README.md)
+[RegexLib](Library/RegexLib) | port of REGEX(3) IEEE Std 1003.2-1992 regular expression routines | [`README.md`](Library/RegexLib/README.md)
+[StdExtLib](Library/StdExtLib) | fixes and functionality on top of StdLib |  [`README.md`](Library/StdExtLib/README.md)
 
-Features (or limitations, depending on how you look):
-* XSDT only.
-* No ACPI 1.0.
-* No special ordering (i.e. FADT can be in any XSDT slot).
-* No 32-bit restrictions on placement.
-* 32-bit DSDT and FACS pointers are not supported.
-
-ShellPlatVars
--------------
-
-This tool is meant to be run from the UEFI Shell,
-and will set the shell environment variables based
-on SMBIOS/ACPI/FDT configuration.
-
-For SMBIOS:
-* pvar-have-smbios for SMBIOS < 3.0.
-* pvar-have-smbios64 for SMBIOS >= 3.0.
-* pvar-smbios-bios-vendor for firmware vendor.
-* pvar-smbios-bios-ver for firmware version.
-* pvar-smbios-bios-data for firmware release data.
-* pvar-smbios-manufacturer for system manufacturer.
-* pvar-smbios-product for product name.
-* pvar-smbios-product-ver for product version.
-* pvar-smbios-product-sn for product serial number.
-* pvar-smbios-product-familty for product family.
-
-For ACPI:
-* pvar-have-acpi for ACPI presence.
-* pvar-acpi-\<OemId\> = True
-* pvar-acpi-\<OemTableId\> = True
-* pvar-acpi-\<Signature\>-rev = \<Revision\>
-* pvar-acpi-\<Signature\>-oem-id = \<OemId\>
-* pvar-acpi-\<Signature\>-oem-rev = \<OemRevision\>
-* pvar-acpi-\<Signature\>-tab-id = \<OemTableId\>
-
-Note: \<OemId\> and \<OemTableId\> are sanitized, replacing
-all occurances of ' ' with '_'.
-
-For FDT (not available on IA32, X64, IPF and EBC):
-* pvar-have-fdt for FDT presence.
-* pvar-fdt-compat-0 = \<root node compatible element 0\>
-* ...
-* pvar-fdt-compat-9 = \<root node compatible element 9\>
-
-Usage:
-
-    fs16:> ShellPlatVars.efi
-    fs16:> set
-        path = .\;FS0:\efi\tools\;FS0:\efi\boot\;FS0:\
-        profiles = ;Driver1;Install;Debug1;network1;
-        uefishellsupport = 3
-        uefishellversion = 2.0
-        uefiversion = 2.40
-        pvar-have-smbios = False
-        pvar-have-smbios64 = False
-        pvar-have-acpi = False
-        pvar-have-fdt = False
-
-This is meant to be used from a shell script. E.g.:
-
-    if x%pvar-have-fdt% eq xTrue then
-        echo I am running on a %pvar-fdt-compat-0%
-    endif
-
-    if x%pvar-have-acpi% eq xFalse then
-        AcpiLoader MyFunkySystem
-    endif
-
-    if x%pvar-acpi-DSDT-tab-id% eq xPOWER_NV then
-        load fs16:\PowerNV\IODA2HostBridge.efi
-    endif
-
-MemResv
+Drivers
 -------
 
-Allows creating memory map entries of type "Reserved" or
-"MMIO". This is useful to "steal" some memory for
-OS low-memory testing, or to create some missing
-MMIO entries.
+What | Description | Platform | Notes
+--- | --- | --- | ---
+[QemuVideoDxe](Drivers/QemuVideoDxe) | GOP driver for QEMU | OVMF, ArmVirtPkg | [`README.md`](Drivers/QemuVideoDxe/README.md)
 
-The range is specified as base address and number of pages.
-All values are hexadecimal, and may be provided with or
-without the leading '0x'. The type parameter is optional.
+Development Tools
+-----------------
 
-For example, to reserve memory in the range 0x90000000-0x90004FFF:
-
-    fs16:> MemResv.efi 0x90000000 5
-
-To reserve MMIO range 0x91000000-0x910FEFFF:
-
-    fs16:> MemResv.efi 0x91000000 ff mmio
-
-Note: This tool requires Tiano Core, as it leverages
-the DXE services.
-
-gdb_uefi.py
------------
-
-Allows loading TianoCore symbols into a GDB remote
-debugging session.
-
-Last validated with GDB 7.10.
-
-This is how it works: GdbSyms.efi is a dummy binary that
-contains the relevant symbols needed by the script
-to find and load image symbols. GdbSyms.efi does not
-need to be present on the target!
-
-    $ gdb /path/to/GdbSyms.dll
-    (gdb) target remote ....
-    (gdb) source Scripts/gdb_uefi.py
-    (gdb) reload-uefi -o /path/to/GdbSyms.dll
-
-N.B: it was noticed that GDB for certain targets behaves strangely
-when run without any binary - like assuming a certain physical
-address space size and endianness. To avoid this madness and
-seing strange bugs, make sure to pass /path/to/GdbSyms.dll
-when starting gdb.
-
-The -o option should be used if you've debugging EFI, where the PE
-images were converted from MACH-O or ELF binaries.
+Name | Description | Notes
+---|---|---
+[gdb_uefi.py](Scripts/GdbUefi) | load TianoCore symbols in gdb | [`README.md`](Scripts/GdbUefi/README.md)
 
 Contact Info
 ------------

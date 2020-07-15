@@ -1,6 +1,6 @@
 #
-# Time-stamp: <2017-03-13 13:10:16 andreiw>
-# Copyright (C) 2016 Andrei Evgenievich Warkentin
+# Time-stamp: <2017-09-24 23:05:35 andreiw>
+# Copyright (C) 2017 Andrei Evgenievich Warkentin
 #
 # This program and the accompanying materials
 # are licensed and made available under the terms and conditions of the BSD License
@@ -23,7 +23,7 @@
 
   DEFINE DEBUG_ENABLE_OUTPUT      = FALSE       # Set to TRUE to enable debug output
   DEFINE DEBUG_PRINT_ERROR_LEVEL  = 0x80000040  # Flags to control amount of debug output
-  DEFINE DEBUG_PROPERTY_MASK      = 0
+  DEFINE DEBUG_PROPERTY_MASK      = 0x2f
 
 [BuildOptions]
   #
@@ -41,7 +41,32 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|$(DEBUG_PROPERTY_MASK)
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|$(DEBUG_PRINT_ERROR_LEVEL)
 
+!include StdLib/StdLib.inc
+#
+# The following are *overrides* to StdLib libs. The section under
+# which they are included *must match StdLib.inc.
+#
+# Also, stuff might randomly break if StdLib changes in incompatible
+# ways. You've been warned. On the positive note, StdLib/LibC/Uefi/Devices/Console
+# hasn't seen any action since Jan 10, 2016.
+#
+[LibraryClasses.Common.UEFI_APPLICATION]
+  LibUefi|UefiToolsPkg/Library/StdLibUefi/Uefi.inf
+  LibIIO|UefiToolsPkg/Library/StdLibInteractiveIO/IIO.inf
+  DevConsole|UefiToolsPkg/Library/StdLibDevConsole/daConsole.inf
+
 [LibraryClasses]
+  #
+  # These are the libraries provided.
+  #
+  FTSLib|UefiToolsPkg/Library/FTSLib/FTSLib.inf
+  UtilsLib|UefiToolsPkg/Library/UtilsLib/UtilsLib.inf
+  StdExtLib|UefiToolsPkg/Library/StdExtLib/StdExtLib.inf
+  SoftFloatLib|UefiToolsPkg/Library/SoftFloatLib/SoftFloatLib.inf
+  RegexLib|UefiToolsPkg/Library/RegexLib/RegexLib.inf
+  #
+  # Everything else below is a dependency.
+  #
   UefiApplicationEntryPoint|MdePkg/Library/UefiApplicationEntryPoint/UefiApplicationEntryPoint.inf
   UefiLib|MdePkg/Library/UefiLib/UefiLib.inf
   PrintLib|MdePkg/Library/BasePrintLib/BasePrintLib.inf
@@ -58,15 +83,20 @@
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
-  UtilsLib|UefiToolsPkg/Library/UtilsLib/UtilsLib.inf
+  SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
   #
   # Shell lib pulls these dependencies.
   #
   FileHandleLib|MdePkg/Library/UefiFileHandleLib/UefiFileHandleLib.inf
-  SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
   UefiHiiServicesLib|MdeModulePkg/Library/UefiHiiServicesLib/UefiHiiServicesLib.inf
   HiiLib|MdeModulePkg/Library/UefiHiiLib/UefiHiiLib.inf
   ShellLib|ShellPkg/Library/UefiShellLib/UefiShellLib.inf
+  HandleParsingLib|ShellPkg/Library/UefiHandleParsingLib/UefiHandleParsingLib.inf
+  #
+  # StdLib deps.
+  #
+  UefiRuntimeLib|MdePkg/Library/UefiRuntimeLib/UefiRuntimeLib.inf
+  UefiDriverEntryPoint|MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
 
 [LibraryClasses.ARM,LibraryClasses.AARCH64,LibraryClasses.PPC64]
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
@@ -76,7 +106,28 @@
   UefiToolsPkg/Applications/AcpiDump/AcpiDump.inf
   UefiToolsPkg/Applications/AcpiLoader/AcpiLoader.inf
   UefiToolsPkg/Applications/ShellPlatVars/ShellPlatVars.inf
+  UefiToolsPkg/Applications/ShellErrVars/ShellErrVars.inf
+  UefiToolsPkg/Applications/ShellMapVar/ShellMapVar.inf
   UefiToolsPkg/Applications/MemResv/MemResv.inf
+  UefiToolsPkg/Applications/RangeIsMapped/RangeIsMapped.inf
+  UefiToolsPkg/Applications/GopTool/GopTool.inf
+  UefiToolsPkg/Applications/PciRom/PciRom.inf
+  UefiToolsPkg/Applications/SetCon/SetCon.inf
+  UefiToolsPkg/Applications/ls/ls.inf
+  UefiToolsPkg/Applications/stat/stat.inf
+  UefiToolsPkg/Applications/cat/cat.inf
+  UefiToolsPkg/Applications/dd/dd.inf
+  UefiToolsPkg/Applications/grep/grep.inf
+
+[Components.X64,Components.AArch64]
+  UefiToolsPkg/Applications/tinycc/TCCInUEFI.inf
 
 [Components.ARM,Components.AARCH64,Components.PPC64]
   UefiToolsPkg/Applications/FdtDump/FdtDump.inf
+
+[Components.IA32,Components.X64,Components.ARM,Components.AArch64]
+  UefiToolsPkg/Drivers/QemuVideoDxe/QemuVideoDxe.inf {
+    <LibraryClasses>
+      FrameBufferBltLib|MdeModulePkg/Library/FrameBufferBltLib/FrameBufferBltLib.inf
+      PciLib|MdePkg/Library/UefiPciLibPciRootBridgeIo/UefiPciLibPciRootBridgeIo.inf
+  }
